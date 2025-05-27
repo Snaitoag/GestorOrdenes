@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="'Detalle Orden ' + (${orden != null ? orden.numeroOrden : 'Desconocida'})">Detalle de Orden</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { padding-top: 4.5rem; }
+        .card-header { background-color: #f8f9fa; }
+        .form-section-title {
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid #dee2e6;
+            padding-bottom: 0.5rem;
+        }
+        .status-badge { font-size: 1.1rem; padding: .5em .75em; }
+    </style>
+</head>
+<body>
+<!-- Navbar del Técnico (Asumimos que está correcta y usa currentURI) -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-info fixed-top">
+    <div class="container-fluid">
+        <a class="navbar-brand" th:href="@{/tecnico}">Panel Técnico</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#tecnicoNavbarNav" aria-controls="tecnicoNavbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="tecnicoNavbarNav">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/tecnico/ordenes/nueva}"
+                       th:classappend="${currentURI != null && currentURI.equals('/tecnico/ordenes/nueva') ? 'active' : ''}">Nueva Orden</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/tecnico/ordenes}"
+                       th:classappend="${currentURI != null && currentURI.startsWith('/tecnico/ordenes') && !currentURI.equals('/tecnico/ordenes/nueva') ? 'active' : ''}">Mis Órdenes</a>
+                </li>
+            </ul>
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item" sec:authorize="isAuthenticated()">
+                            <span class="navbar-text me-3">
+                                Técnico: <span sec:authentication="principal.nombreCompleto"></span>
+                            </span>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/}">Ir a Inicio Público</a>
+                </li>
+                <li class="nav-item" sec:authorize="isAuthenticated()">
+                    <a class="btn btn-outline-light" th:href="@{/logout}">Cerrar Sesión</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Contenido Principal -->
+<div class="container-fluid mt-4 mb-5">
+    <div class="row">
+        <!-- Sidebar del Técnico (Asumimos que está correcta y usa currentURI) -->
+        <nav id="sidebarMenuTecnicoDetalle" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
+            <div class="position-sticky pt-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/tecnico}"
+                           th:classappend="${currentURI != null && (currentURI.equals('/tecnico') or currentURI.equals('/tecnico/')) ? 'active' : ''}">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/tecnico/ordenes/nueva}"
+                           th:classappend="${currentURI != null && currentURI.equals('/tecnico/ordenes/nueva') ? 'active' : ''}">
+                            <i class="fas fa-plus-circle"></i> Crear Nueva Orden
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/tecnico/ordenes}"
+                           th:classappend="${currentURI != null && currentURI.startsWith('/tecnico/ordenes') && !currentURI.equals('/tecnico/ordenes/nueva') ? 'active' : ''}">
+                            <i class="fas fa-clipboard-list"></i> Ver Órdenes
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div th:if="${orden != null}"> <!-- th:object="${actualizarDTO}" NO VA AQUÍ, SINO EN EL <form> -->
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">Orden N°: <span th:text="${orden.numeroOrden}">ORD-XXXX</span></h1>
+                    <a th:href="@{/tecnico/ordenes}" class="btn btn-sm btn-outline-secondary">Volver a Lista de Órdenes</a>
+                </div>
+
+                <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+                    <span th:text="${successMessage}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <span th:text="${errorMessage}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-7">
+                        <!-- ... (Sección de Información General de la Orden, sin cambios) ... -->
+                        <div class="card mb-4">
+                            <div class="card-header"><strong>Información General de la Orden</strong></div>
+                            <div class="card-body">
+                                <p><strong>Cliente:</strong> <span th:text="${orden.clienteNombre}"></span>
+                                    (<a th:href="'tel:' + ${orden.clienteTelefono}" th:text="${orden.clienteTelefono}"></a>
+                                    <span th:if="${orden.clienteEmail != null && !orden.clienteEmail.isEmpty()}"> | <a th:href="'mailto:' + ${orden.clienteEmail}" th:text="${orden.clienteEmail}"></a></span>)
+                                </p>
+                                <p><strong>Dispositivo:</strong>
+                                    <span th:text="${orden.dispositivoTipo}"></span>
+                                    <span th:if="${orden.dispositivoMarca != null && !orden.dispositivoMarca.isEmpty()}" th:text="' ' + ${orden.dispositivoMarca}"></span>
+                                    <span th:if="${orden.dispositivoModelo != null && !orden.dispositivoModelo.isEmpty()}" th:text="' ' + ${orden.dispositivoModelo}"></span>
+                                    <span th:if="${orden.dispositivoSerial != null && !orden.dispositivoSerial.isEmpty()}" th:text="' (S/N: ' + ${orden.dispositivoSerial} + ')'"></span>
+                                </p>
+                                <p><strong>Problema Reportado:</strong></p>
+                                <p style="white-space: pre-wrap;" th:text="${orden.problemaDescripcion}"></p>
+                                <p th:if="${orden.observacionesRecepcion != null && !orden.observacionesRecepcion.isEmpty()}"><strong>Observaciones al Recibir:</strong>
+                                    <span style="white-space: pre-wrap;" th:text="${orden.observacionesRecepcion}"></span>
+                                </p>
+                                <hr>
+                                <p><strong>Fecha de Ingreso:</strong> <span th:text="${orden.fechaCreacion != null ? #temporals.format(orden.fechaCreacion, 'dd/MM/yyyy HH:mm') : 'N/A'}"></span></p>
+                                <p><strong>Última Actualización:</strong> <span th:text="${orden.fechaActualizacionEstado != null ? #temporals.format(orden.fechaActualizacionEstado, 'dd/MM/yyyy HH:mm') : 'N/A'}"></span></p>
+                                <p th:if="${orden.tecnicoAsignadoNombre != null && !orden.tecnicoAsignadoNombre.isEmpty()}"><strong>Técnico Asignado:</strong> <span th:text="${orden.tecnicoAsignadoNombre}"></span></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-5">
+                        <div class="card">
+                            <div class="card-header"><strong>Gestionar Orden</strong></div>
+                            <div class="card-body">
+                                <h4>Estado Actual:
+                                    <span class="badge status-badge bg-primary" th:text="${orden.estadoDisplayName}">ESTADO</span>
+                                </h4>
+                                <hr>
+                                <!-- EL th:object VA EN EL <form> -->
+                                <form th:action="@{'/tecnico/ordenes/actualizar/' + ${orden.id}}" th:object="${actualizarDTO}" method="post">
+                                    <div class="mb-3">
+                                        <label for="nuevoEstado" class="form-label">Cambiar Estado a:</label>
+                                        <!-- th:field USA EL OBJETO DEL FORMULARIO, NO 'orden' -->
+                                        <select id="nuevoEstado" th:field="*{nuevoEstado}" class="form-select"
+                                                th:classappend="${#fields.hasErrors('nuevoEstado')} ? 'is-invalid' : ''">
+                                            <option th:each="estadoOpt : ${estadosDisponibles}"
+                                                    th:value="${estadoOpt}"
+                                                    th:text="${estadoOpt.displayName}"></option>
+                                        </select>
+                                        <div th:if="${#fields.hasErrors('nuevoEstado')}" th:errors="*{nuevoEstado}" class="invalid-feedback"></div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="diagnosticoTecnico" class="form-label">Diagnóstico Técnico / Notas de Trabajo (Opcional):</label>
+                                        <!-- th:field USA EL OBJETO DEL FORMULARIO, NO 'orden' -->
+                                        <textarea id="diagnosticoTecnico" th:field="*{diagnosticoTecnico}" rows="5" class="form-control"
+                                                  th:classappend="${#fields.hasErrors('diagnosticoTecnico')} ? 'is-invalid' : ''"
+                                                  placeholder="Ingrese diagnóstico o notas..."></textarea>
+                                        <div th:if="${#fields.hasErrors('diagnosticoTecnico')}" th:errors="*{diagnosticoTecnico}" class="invalid-feedback"></div>
+                                        <small class="form-text text-muted">Dejar vacío para borrar el diagnóstico existente al actualizar.</small>
+                                    </div>
+
+                                    <button type="submit" class="btn btn-success w-100">Actualizar Orden</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div th:if="${orden == null}" class="alert alert-warning text-center mt-4">
+                No se pudo cargar la información de la orden.
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
+</body>
+</html>

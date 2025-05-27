@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${isEditMode ? 'Editar Usuario' : 'Crear Nuevo Usuario'}">Formulario Usuario</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { padding-top: 4.5rem; }
+        .form-section-title { margin-top: 1.5rem; margin-bottom: 1rem; border-bottom: 1px solid #dee2e6; padding-bottom: 0.5rem; }
+    </style>
+</head>
+<body>
+<!-- Navbar y Sidebar (asumiendo que están bien) -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+    <div class="container-fluid">
+        <a class="navbar-brand" th:href="@{/admin}">Panel Admin</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminNavbarNav" aria-controls="adminNavbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="adminNavbarNav">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/admin/usuarios}"
+                       th:classappend="${currentURI != null && currentURI.startsWith('/admin/usuarios') ? 'active' : ''}">Usuarios</a>
+                </li>
+            </ul>
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item" sec:authorize="isAuthenticated()">
+                        <span class="navbar-text me-3">
+                            Admin: <span sec:authentication="principal.username">Usuario</span>
+                        </span>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/}">Volver a Inicio</a>
+                </li>
+                <li class="nav-item" sec:authorize="isAuthenticated()">
+                    <a class="btn btn-outline-light" th:href="@{/logout}">Cerrar Sesión</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <nav id="sidebarMenuAdminForm" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
+            <div class="position-sticky pt-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a th:href="@{/admin}" class="nav-link"
+                           th:classappend="${currentURI != null && (currentURI.equals('/admin') or currentURI.equals('/admin/')) ? 'active' : ''}">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a th:href="@{/admin/usuarios}" class="nav-link"
+                           th:classappend="${currentURI != null && currentURI.startsWith('/admin/usuarios') ? 'active' : ''}">
+                            <i class="fas fa-users"></i> Gestión de Usuarios
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <h1 class="h2" th:text="${isEditMode ? 'Editar Usuario' : 'Crear Nuevo Usuario'}">Formulario Usuario</h1>
+            <hr>
+
+            <div th:if="${errorMessageGlobal}" class="alert alert-danger" role="alert" th:text="${errorMessageGlobal}"></div>
+
+            <!-- Formulario para CREACIÓN -->
+            <form th:if="${!isEditMode}" th:action="@{/admin/usuarios/crear}" th:object="${usuarioForm}" method="post">
+                <!-- Campos para CREACIÓN -->
+                <div class="mb-3">
+                    <label for="nombreCompleto" class="form-label">Nombre Completo <span class="text-danger">*</span></label>
+                    <input type="text" id="nombreCompleto" th:field="*{nombreCompleto}" class="form-control"
+                           th:classappend="${#fields.hasErrors('nombreCompleto')} ? 'is-invalid' : ''">
+                    <div th:if="${#fields.hasErrors('nombreCompleto')}" th:errors="*{nombreCompleto}" class="invalid-feedback"></div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
+                    <input type="email" id="email" th:field="*{email}" class="form-control"
+                           th:classappend="${#fields.hasErrors('email')} ? 'is-invalid' : ''">
+                    <div th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="invalid-feedback"></div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="password" class="form-label">Contraseña <span class="text-danger">*</span></label>
+                    <input type="password" id="password" th:field="*{password}" class="form-control"
+                           th:classappend="${#fields.hasErrors('password')} ? 'is-invalid' : ''">
+                    <div th:if="${#fields.hasErrors('password')}" th:errors="*{password}" class="invalid-feedback"></div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="rol" class="form-label">Rol <span class="text-danger">*</span></label>
+                    <select id="rol" th:field="*{rol}" class="form-select"
+                            th:classappend="${#fields.hasErrors('rol')} ? 'is-invalid' : ''">
+                        <option value="">Seleccione un rol</option>
+                        <option th:each="rolOpt : ${rolesDisponibles}"
+                                th:value="${rolOpt}"
+                                th:text="${#strings.replace(rolOpt.name(), 'ROLE_', '')}"></option>
+                    </select>
+                    <div th:if="${#fields.hasErrors('rol')}" th:errors="*{rol}" class="invalid-feedback"></div>
+                </div>
+
+                <div class="mb-3 form-check">
+                    <input type="checkbox" id="activo" th:field="*{activo}" class="form-check-input">
+                    <label for="activo" class="form-check-label">Usuario Activo</label>
+                    <div th:if="${#fields.hasErrors('activo')}" th:errors="*{activo}" class="text-danger d-block small"></div>
+                </div>
+                <hr class="my-4">
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <button type="submit" class="btn btn-primary btn-lg">Crear Usuario</button>
+                    <a th:href="@{/admin/usuarios}" class="btn btn-outline-secondary btn-lg">Cancelar</a>
+                </div>
+            </form>
+
+            <!-- Formulario para EDICIÓN -->
+            <form th:if="${isEditMode}" th:action="@{/admin/usuarios/editar}" th:object="${usuarioForm}" method="post">
+                <input type="hidden" th:field="*{id}" /> <!-- Campo ID para edición -->
+
+                <div class="mb-3">
+                    <label for="editNombreCompleto" class="form-label">Nombre Completo <span class="text-danger">*</span></label>
+                    <input type="text" id="editNombreCompleto" th:field="*{nombreCompleto}" class="form-control"
+                           th:classappend="${#fields.hasErrors('nombreCompleto')} ? 'is-invalid' : ''">
+                    <div th:if="${#fields.hasErrors('nombreCompleto')}" th:errors="*{nombreCompleto}" class="invalid-feedback"></div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="editEmail" class="form-label">Email <span class="text-danger">*</span></label>
+                    <!-- CORRECCIÓN DE SINTAXIS AQUÍ -->
+                    <input type="email" id="editEmail" th:field="*{email}" class="form-control"
+                           th:readonly="true"
+                           th:classappend="${#fields.hasErrors('email') ? 'is-invalid' : ''}" /> <!-- La etiqueta input se cierra aquí -->
+                    <div th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="invalid-feedback"></div>
+                    <small class="form-text text-muted">El email no se puede cambiar durante la edición.</small>
+                </div>
+
+                <div class="mb-3">
+                    <label for="nuevaPassword" class="form-label">Nueva Contraseña (Opcional)</label>
+                    <input type="password" id="nuevaPassword" th:field="*{nuevaPassword}" class="form-control"
+                           th:classappend="${#fields.hasErrors('nuevaPassword')} ? 'is-invalid' : ''">
+                    <div th:if="${#fields.hasErrors('nuevaPassword')}" th:errors="*{nuevaPassword}" class="invalid-feedback"></div>
+                    <small class="form-text text-muted">Dejar en blanco para no cambiar la contraseña actual. Mínimo 6 caracteres si se cambia.</small>
+                </div>
+
+                <div class="mb-3">
+                    <label for="editRol" class="form-label">Rol <span class="text-danger">*</span></label>
+                    <select id="editRol" th:field="*{rol}" class="form-select"
+                            th:classappend="${#fields.hasErrors('rol')} ? 'is-invalid' : ''">
+                        <option value="">Seleccione un rol</option>
+                        <option th:each="rolOpt : ${rolesDisponibles}"
+                                th:value="${rolOpt}"
+                                th:text="${#strings.replace(rolOpt.name(), 'ROLE_', '')}"></option>
+                    </select>
+                    <div th:if="${#fields.hasErrors('rol')}" th:errors="*{rol}" class="invalid-feedback"></div>
+                </div>
+
+                <div class="mb-3 form-check">
+                    <input type="checkbox" id="editActivo" th:field="*{activo}" class="form-check-input">
+                    <label for="editActivo" class="form-check-label">Usuario Activo</label>
+                    <div th:if="${#fields.hasErrors('activo')}" th:errors="*{activo}" class="text-danger d-block small"></div>
+                </div>
+                <hr class="my-4">
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <button type="submit" class="btn btn-primary btn-lg">Actualizar Usuario</button>
+                    <a th:href="@{/admin/usuarios}" class="btn btn-outline-secondary btn-lg">Cancelar</a>
+                </div>
+            </form>
+        </main>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
+</body>
+</html>

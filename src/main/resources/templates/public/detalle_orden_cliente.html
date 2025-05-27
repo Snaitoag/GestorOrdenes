@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'Detalle Orden ' + (${orden != null ? orden.numeroOrden : 'Desconocida'}) + ' - Gestor de Órdenes'">Detalle de Orden</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: #f8f9fa;
+            padding-top: 56px; /* Ajuste para navbar fija */
+        }
+        .main-content {
+            flex: 1;
+            padding-top: 20px;
+            padding-bottom: 20px;
+        }
+        .card-header {
+            background-color: #e9ecef;
+        }
+        .status-badge {
+            font-size: 1.1rem; /* Hecho un poco más pequeño que en la otra vista, puedes ajustar */
+            padding: .4em .6em;
+        }
+        .footer {
+            background-color: #343a40;
+            color: white;
+            padding: 2rem 0; /* Consistente con la otra página */
+            text-align: center;
+            margin-top: auto; /* Empuja el footer hacia abajo */
+        }
+        .navbar { position: fixed; top: 0; width: 100%; z-index: 1030;} /* Navbar fija */
+    </style>
+</head>
+<body>
+<!-- Navbar Pública Actualizada -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+    <div class="container">
+        <a class="navbar-brand" th:href="@{/}">Gestor de Órdenes</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#publicNavbar" aria-controls="publicNavbar" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="publicNavbar">
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <!-- El enlace "Inicio" ahora es el principal para la consulta -->
+                    <a class="nav-link" th:href="@{/}">Inicio / Consultar</a>
+                </li>
+                <li class="nav-item">
+                    <!-- Apunta al ID del footer en la página de inicio -->
+                    <a class="nav-link" th:href="@{/#contacto-footer}">Contáctanos</a>
+                </li>
+                <li class="nav-item">
+                    <a class="btn btn-outline-light" th:href="@{/login}">Acceso Personal</a>
+                </li>
+                <!-- Selector de idioma aquí más adelante -->
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Contenido Principal -->
+<div class="main-content container">
+    <div th:if="${orden != null}">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0">Detalle de Orden: <span th:text="${orden.numeroOrden}">ORD-XXXX</span></h3>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h4>Información del Cliente</h4>
+                        <p><strong>Nombre:</strong> <span th:text="${orden.clienteNombre}">Nombre Cliente</span></p>
+                        <p th:if="${orden.clienteEmail != null && !orden.clienteEmail.isEmpty()}"><strong>Email:</strong> <span th:text="${orden.clienteEmail}">email@cliente.com</span></p>
+                        <p><strong>Teléfono:</strong> <span th:text="${orden.clienteTelefono}">123456789</span></p>
+                    </div>
+                    <div class="col-md-6 text-md-end">
+                        <h4>Estado Actual</h4>
+                        <p>
+                                <span class="badge status-badge"
+                                      th:classappend="${orden.estadoDisplayName == 'Recibido' ? 'bg-secondary' :
+                                                       orden.estadoDisplayName == 'En Diagnóstico' ? 'bg-warning text-dark' :
+                                                       orden.estadoDisplayName == 'En Reparación' ? 'bg-primary' :
+                                                       orden.estadoDisplayName == 'Listo para Entrega' ? 'bg-success' :
+                                                       orden.estadoDisplayName == 'Entregado' ? 'bg-dark' :
+                                                       orden.estadoDisplayName == 'Cancelado' ? 'bg-danger' : 'bg-light text-dark'}"
+                                      th:text="${orden.estadoDisplayName}">ESTADO</span>
+                        </p>
+                        <p><strong>Última Actualización:</strong>
+                            <span th:text="${orden.fechaActualizacionEstado != null ? #temporals.format(orden.fechaActualizacionEstado, 'dd/MM/yyyy HH:mm') : 'N/A'}">Fecha</span>
+                        </p>
+                    </div>
+                </div>
+                <hr>
+                <h4>Información del Dispositivo y Servicio</h4>
+                <p><strong>Tipo de Dispositivo:</strong> <span th:text="${orden.dispositivoTipo}">Tipo</span></p>
+                <p th:if="${orden.dispositivoMarca != null && !orden.dispositivoMarca.isEmpty()}"><strong>Marca:</strong> <span th:text="${orden.dispositivoMarca}">Marca</span></p>
+                <p th:if="${orden.dispositivoModelo != null && !orden.dispositivoModelo.isEmpty()}"><strong>Modelo:</strong> <span th:text="${orden.dispositivoModelo}">Modelo</span></p>
+                <p th:if="${orden.dispositivoSerial != null && !orden.dispositivoSerial.isEmpty()}"><strong>Serial:</strong> <span th:text="${orden.dispositivoSerial}">Serial</span></p>
+
+                <h5>Problema Reportado</h5>
+                <p class="card-text" style="white-space: pre-wrap;" th:text="${orden.problemaDescripcion}">Descripción del problema.</p>
+
+                <div th:if="${orden.diagnosticoTecnico != null && !orden.diagnosticoTecnico.isEmpty()}">
+                    <hr>
+                    <h5>Diagnóstico Técnico</h5>
+                    <p class="card-text" style="white-space: pre-wrap;" th:text="${orden.diagnosticoTecnico}">Diagnóstico realizado.</p>
+                </div>
+                <!-- AQUÍ TERMINABA EL card-body ANTES, CORREGIDO -->
+            </div> <!-- Cierre de card-body -->
+            <div class="card-footer text-muted">
+                Fecha de Ingreso: <span th:text="${orden.fechaCreacion != null ? #temporals.format(orden.fechaCreacion, 'dd/MM/yyyy HH:mm') : 'N/A'}">Fecha</span>
+            </div>
+        </div> <!-- Cierre de card -->
+
+        <div class="mt-4 text-center">
+            <!-- Botón "Consultar Otra Orden" ahora apunta a la raíz "/" -->
+            <a th:href="@{/}" class="btn btn-secondary">
+                <i class="fas fa-search"></i> Consultar Otra Orden
+            </a>
+        </div>
+    </div> <!-- Cierre de th:if="${orden != null}" -->
+
+    <!-- Mensaje si la orden no se pasó al modelo -->
+    <div th:if="${orden == null}" class="alert alert-warning text-center mt-3">
+        No se pudo cargar la información de la orden. Por favor, intente una nueva consulta.
+    </div>
+</div> <!-- Cierre de main-content container -->
+
+<!-- Footer -->
+<footer class="footer" id="contacto-footer-detalle"> <!-- ID único para el footer de esta página -->
+    <div class="container">
+        <p>© <span th:text="${#dates.year(#dates.createNow())}"></span> [Nombre de tu Tienda/Empresa]. Todos los derechos reservados.</p>
+        <p>Dirección: Calle Falsa 123, Ciudad | Teléfono: (123) 456-7890 | Email: soporte@tutienda.com</p>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
+</body>
+</html>
